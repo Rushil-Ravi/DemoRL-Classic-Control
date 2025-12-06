@@ -1,0 +1,43 @@
+# Configuration file
+environments:
+  CartPole-v1:
+    state_dim: 4
+    action_dim: 2
+    max_steps: 500
+    success_threshold: 195
+    
+  LunarLander-v2:
+    state_dim: 8
+    action_dim: 4
+    max_steps: 1000
+    success_threshold: 200
+
+dqn:
+  learning_rate: 0.001
+  gamma: 0.99
+  epsilon_start: 1.0
+  epsilon_min: 0.01
+  epsilon_decay: 0.995
+  buffer_size: 10000
+  batch_size: 64
+  target_update: 10
+  episodes: 300
+
+bc:
+  learning_rate: 0.001
+  batch_size: 32
+  epochs: 100
+
+ppo:
+  learning_rate: 0.0003
+  gamma: 0.99
+  clip_epsilon: 0.2
+  value_coef: 0.5
+  entropy_coef: 0.01
+  batch_size: 64
+  ppo_epochs: 4
+  episodes: 500
+
+evaluation:
+  num_episodes: 20
+  num_seeds: 5
