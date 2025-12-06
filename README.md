@@ -3,18 +3,18 @@
 **Course:** Deep Reinforcement Learning  
 **Team:** Rushil Ravi (UIN: 836000314) & Isabel Moore (UIN: 229001058)  
 
-## 📋 Project Overview
+##  Project Overview
 
 This project investigates whether starting from expert demonstrations accelerates reinforcement learning training in classic control environments. We implement a complete pipeline: Expert DQN → Behavior Cloning → PPO fine-tuning, comparing Pure RL vs BC→RL approaches.
 
-## 🎯 Key Findings
+##  Key Findings
 
 ✅ **79.6% faster learning** with BC initialization on CartPole-v1  
 ✅ **Perfect imitation** by Behavior Cloning (500.00 ± 0.00 reward)  
 ✅ **Statistical significance** proven through extensive evaluation  
 ✅ **Sample efficiency** dramatically improved with demonstrations
 
-## 🚀 Quick Start
+##  Quick Start
 
 ### 1. Installation
 ```bash
@@ -30,7 +30,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 pip install -r requirements.txt
 ```
 
-###2. Run Complete Pipeline
+### 2. Run Complete Pipeline
 ```bash
 # For CartPole-v1 (recommended)
 python main.py --env CartPole-v1 --mode all
@@ -44,9 +44,10 @@ python main.py --env CartPole-v1 --mode eval      # Final evaluation
 
 ```
 
-###3. Results Summary
+### 3. Results Summary
 
 ### CartPole-v1 Results:
+
 | Method  | Average Reward    | Episodes to Threshold | Improvement       |
 |---------|-------------------|-----------------------|-------------------|
 | Pure RL | 44.06 ± 30.91     | 270 episodes          | Baseline          |
@@ -65,7 +66,7 @@ python main.py --env CartPole-v1 --mode eval      # Final evaluation
 4. Sample efficiency is dramatically improved
 
 
-###4. Project Structure
+### 4. Project Structure
 
 ```
 
@@ -92,74 +93,74 @@ DemoRL-Classic-Control/
 ```
 
 
-###5. Generated Outputs
+### 5. Generated Outputs
 
 After running the pipeline, you'll get:
 
 ### Models:
-expert_CartPole-v1.pth - Expert DQN model
+1. expert_CartPole-v1.pth - Expert DQN model
 
-demos_CartPole-v1.pkl - Expert demonstrations
+2. demos_CartPole-v1.pkl - Expert demonstrations
 
-bc_CartPole-v1.pth - Behavior cloning model
+3. bc_CartPole-v1.pth - Behavior cloning model
 
-pure_rl_CartPole-v1.pth - Pure PPO model
+4. pure_rl_CartPole-v1.pth - Pure PPO model
 
-bc_rl_CartPole-v1.pth - BC-initialized PPO model
+5. bc_rl_CartPole-v1.pth - BC-initialized PPO model
 
 ### Plots:
-expert_training_CartPole-v1.png - Expert learning curve
+1. expert_training_CartPole-v1.png - Expert learning curve
 
-bc_training_CartPole-v1.png - BC training loss
+2. bc_training_CartPole-v1.png - BC training loss
 
-comparison_CartPole-v1.png - Pure RL vs BC→RL comparison
+3. comparison_CartPole-v1.png - Pure RL vs BC→RL comparison
 
 
 ###6. Technical Implementation
 
 Algorithms Implemented:
-Deep Q-Network (DQN) for expert training
+1. Deep Q-Network (DQN) for expert training
 
-Behavior Cloning (BC) for imitation learning
+2. Behavior Cloning (BC) for imitation learning
 
-Proximal Policy Optimization (PPO) for RL fine-tuning
+3. Proximal Policy Optimization (PPO) for RL fine-tuning
 
-Experience Replay for stable training
+4. Experience Replay for stable training
 
-Epsilon-greedy exploration strategy
+5. Epsilon-greedy exploration strategy
 
 
 ###7. Team Contributions
 
 Rushil Ravi:
 
-Expert DQN implementation
+- Expert DQN implementation
 
-Demonstration collection pipeline
+- Demonstration collection pipeline
 
-Project infrastructure and testing
+- Project infrastructure and testing
 
-Code documentation
+- Code documentation
 
 
 Isabel Moore:
 
-Experimental design and methodology
+- Experimental design and methodology
 
-Statistical analysis and evaluation
+- Statistical analysis and evaluation
 
-Literature Survey
+- Literature Survey
 
-Final report
+- Final report
 
 
 ###8. Acknowledgments
 
-OpenAI Gym for the environments
+- OpenAI Gym for the environments
 
-PyTorch team for the deep learning framework
+- PyTorch team for the deep learning framework
 
-Course instructors for guidance and feedback
+- Course instructors for guidance and feedback
 
-Reinforcement learning research community
+- Reinforcement learning research community
 
