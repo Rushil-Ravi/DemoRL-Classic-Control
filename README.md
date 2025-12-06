@@ -116,7 +116,7 @@ After running the pipeline, you'll get:
 3. comparison_CartPole-v1.png - Pure RL vs BC→RL comparison
 
 
-###6. Technical Implementation
+### 6. Technical Implementation
 
 Algorithms Implemented:
 1. Deep Q-Network (DQN) for expert training
@@ -130,7 +130,7 @@ Algorithms Implemented:
 5. Epsilon-greedy exploration strategy
 
 
-###7. Team Contributions
+### 7. Team Contributions
 
 Rushil Ravi:
 
@@ -154,7 +154,7 @@ Isabel Moore:
 - Final report
 
 
-###8. Acknowledgments
+### 8. Acknowledgments
 
 - OpenAI Gym for the environments
 
