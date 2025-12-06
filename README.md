@@ -28,7 +28,7 @@ source venv/bin/activate  # On Windows: venv\Scripts\activate
 
 # Install dependencies
 pip install -r requirements.txt
-```bash
+```
 
 ###2. Run Complete Pipeline
 ```bash
@@ -42,7 +42,7 @@ python main.py --env CartPole-v1 --mode bc        # Train behavior cloning
 python main.py --env CartPole-v1 --mode rl        # Compare RL methods
 python main.py --env CartPole-v1 --mode eval      # Final evaluation
 
-```bash
+```
 
 ###3. Results Summary
 
@@ -96,7 +96,7 @@ DemoRL-Classic-Control/
 
 After running the pipeline, you'll get:
 
-Models:
+### Models:
 expert_CartPole-v1.pth - Expert DQN model
 
 demos_CartPole-v1.pkl - Expert demonstrations
@@ -107,7 +107,7 @@ pure_rl_CartPole-v1.pth - Pure PPO model
 
 bc_rl_CartPole-v1.pth - BC-initialized PPO model
 
-Plots:
+### Plots:
 expert_training_CartPole-v1.png - Expert learning curve
 
 bc_training_CartPole-v1.png - BC training loss
