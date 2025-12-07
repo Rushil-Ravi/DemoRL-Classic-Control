@@ -1,5 +1,8 @@
 import sys
 import os
+import random
+# Force CPU-only mode to avoid CUDA library issues
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -9,18 +12,18 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 from collections import deque
-import random
+from src.seed_utils import set_seed
 
 # Import from src if available, otherwise define locally
 try:
     from src.environments import EnvironmentWrapper
     from src.networks import QNetwork
 
-    print("✅ Using src module imports")
+    print("Using src module imports")
 except ImportError:
     import gymnasium as gym
 
-    print("⚠️ Using local implementations")
+    print("WARNING: Using local implementations")
 
 
     class EnvironmentWrapper:
@@ -48,21 +51,20 @@ except ImportError:
     class QNetwork(nn.Module):
         def __init__(self, state_dim, action_dim):
             super().__init__()
-            self.net = nn.Sequential(
-                nn.Linear(state_dim, 128),
-                nn.ReLU(),
-                nn.Linear(128, 64),
-                nn.ReLU(),
-                nn.Linear(64, action_dim)
-            )
+            self.fc1 = nn.Linear(state_dim, 128)
+            self.fc2 = nn.Linear(128, 128)
+            self.fc3 = nn.Linear(128, action_dim)
 
         def forward(self, x):
-            return self.net(x)
+            x = torch.relu(self.fc1(x))
+            x = torch.relu(self.fc2(x))
+            return self.fc3(x)
 
 
 class DQNAgent:
     def __init__(self, state_dim, action_dim):
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.action_dim = action_dim  # Store action_dim
 
         self.q_network = QNetwork(state_dim, action_dim).to(self.device)
         self.target_network = QNetwork(state_dim, action_dim).to(self.device)
@@ -73,16 +75,19 @@ class DQNAgent:
         # Replay buffer
         self.replay_buffer = deque(maxlen=10000)
 
-        # Hyperparameters
+        # Improved hyperparameters for more consistent training
         self.gamma = 0.99
         self.epsilon = 1.0
         self.epsilon_min = 0.01
         self.epsilon_decay = 0.995
         self.batch_size = 64
+        self.update_frequency = 4  # Update every N steps
+        self.target_update_frequency = 100  # Update target network every N steps
+        self.steps = 0
 
     def select_action(self, state, eval_mode=False):
         if not eval_mode and np.random.random() < self.epsilon:
-            return np.random.randint(self.q_network.net[-1].out_features)
+            return np.random.randint(self.action_dim)  # Use stored action_dim
 
         state_tensor = torch.FloatTensor(state).unsqueeze(0).to(self.device)
         with torch.no_grad():
@@ -107,13 +112,13 @@ class DQNAgent:
         # Current Q values
         q_values = self.q_network(states).gather(1, actions.unsqueeze(1))
 
-        # Target Q values
+        # Target Q values (using target network for stability)
         with torch.no_grad():
             next_q_values = self.target_network(next_states).max(1, keepdim=True)[0]
             target_q_values = rewards.unsqueeze(1) + self.gamma * next_q_values * (1 - dones.unsqueeze(1))
 
-        # Compute loss
-        loss = nn.functional.mse_loss(q_values, target_q_values)
+        # Compute loss (Huber loss for more stability)
+        loss = nn.functional.smooth_l1_loss(q_values, target_q_values)
 
         # Optimize
         self.optimizer.zero_grad()
@@ -124,16 +129,20 @@ class DQNAgent:
         # Update epsilon
         self.epsilon = max(self.epsilon_min, self.epsilon * self.epsilon_decay)
 
-        # Update target network periodically
-        if np.random.random() < 0.01:  # 1% chance each update
+        # Update target network periodically (not randomly!)
+        self.steps += 1
+        if self.steps % self.target_update_frequency == 0:
             self.target_network.load_state_dict(self.q_network.state_dict())
 
         return loss.item()
 
 
-def train_expert(env_name='CartPole-v1', num_episodes=200):
+def train_expert(env_name='CartPole-v1', num_episodes=500, seed=42):
     """Train expert DQN agent"""
-    print(f"🚀 Training Expert Agent on {env_name}")
+    print(f"Training Expert Agent on {env_name} (seed={seed})")
+    
+    # Set seeds for reproducibility
+    set_seed(seed)
 
     # Initialize environment
     env = EnvironmentWrapper(env_name)
@@ -186,22 +195,52 @@ def train_expert(env_name='CartPole-v1', num_episodes=200):
     # Save model
     model_path = f"expert_{env_name}.pth"
     torch.save(agent.q_network.state_dict(), model_path)
-    print(f"💾 Expert model saved: {model_path}")
+    print(f"Expert model saved: {model_path}")
 
-    # Plot results
-    plt.figure(figsize=(10, 5))
-    plt.plot(episode_rewards)
-    plt.xlabel('Episode')
-    plt.ylabel('Reward')
-    plt.title(f'Expert Training on {env_name}')
-    plt.grid(True, alpha=0.3)
-    plt.savefig(f'expert_training_{env_name}.png')
-    plt.show()
+    # Create images directory if it doesn't exist
+    os.makedirs('images', exist_ok=True)
+
+    # Plot results with improved styling
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
+    
+    # Left plot: Episode rewards with rolling average
+    ax1.plot(episode_rewards, alpha=0.3, color='steelblue', label='Episode Reward')
+    
+    # Add rolling average
+    window = 20
+    if len(episode_rewards) >= window:
+        rolling_avg = np.convolve(episode_rewards, np.ones(window)/window, mode='valid')
+        ax1.plot(range(window-1, len(episode_rewards)), rolling_avg, 
+                color='darkblue', linewidth=2, label=f'{window}-Episode Moving Average')
+    
+    ax1.set_xlabel('Episode', fontsize=12)
+    ax1.set_ylabel('Total Reward', fontsize=12)
+    ax1.set_title(f'Expert (DQN) Training Progress - {env_name}', fontsize=13, fontweight='bold')
+    ax1.legend(loc='lower right')
+    ax1.grid(True, alpha=0.3, linestyle='--')
+    
+    # Right plot: Reward distribution (last 50 episodes)
+    recent_rewards = episode_rewards[-50:] if len(episode_rewards) >= 50 else episode_rewards
+    ax2.hist(recent_rewards, bins=15, alpha=0.7, color='steelblue', edgecolor='black')
+    ax2.axvline(np.mean(recent_rewards), color='red', linestyle='--', linewidth=2, 
+               label=f'Mean: {np.mean(recent_rewards):.1f}')
+    ax2.set_xlabel('Episode Reward', fontsize=12)
+    ax2.set_ylabel('Frequency', fontsize=12)
+    ax2.set_title(f'Reward Distribution (Last {len(recent_rewards)} Episodes)', 
+                 fontsize=13, fontweight='bold')
+    ax2.legend()
+    ax2.grid(True, alpha=0.3, linestyle='--', axis='y')
+    
+    plt.tight_layout()
+    plt.savefig(f'images/expert_training_{env_name}.png', dpi=150, bbox_inches='tight')
+    print(f"Training plot saved: images/expert_training_{env_name}.png")
+    plt.close()
 
     env.close()
 
-    print(f"\n✅ Expert training complete!")
-    print(f"Final average reward: {np.mean(episode_rewards[-20:]):.2f}")
+    print(f"\nExpert training complete!")
+    print(f"Final average reward (last 20 episodes): {np.mean(episode_rewards[-20:]):.2f}")
+    print(f"Best episode reward: {np.max(episode_rewards):.2f}")
 
     return agent
 

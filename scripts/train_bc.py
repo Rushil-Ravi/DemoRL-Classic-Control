@@ -1,6 +1,9 @@
 import sys
 import os
 
+# Force CPU-only mode to avoid CUDA library issues
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pickle
@@ -9,23 +12,27 @@ import matplotlib.pyplot as plt
 import torch
 import torch.nn as nn
 import torch.optim as optim
+from src.seed_utils import set_seed
 
 
-def train_bc(env_name='CartPole-v1'):
+def train_bc(env_name='CartPole-v1', seed=42):
     """Train Behavior Cloning agent"""
-    print(f"🎓 Training Behavior Cloning on {env_name}")
+    # Set seeds for reproducibility
+    set_seed(seed)
+    
+    print(f"Training Behavior Cloning on {env_name} (seed={seed})")
 
     # Load demonstrations
     demo_path = f"demos_{env_name}.pkl"
     if not os.path.exists(demo_path):
-        print(f"❌ Demonstrations not found: {demo_path}")
+        print(f"ERROR: Demonstrations not found: {demo_path}")
         print("Please run collect_demos.py first!")
         return
 
     with open(demo_path, 'rb') as f:
         demonstrations = pickle.load(f)
 
-    print(f"✅ Loaded {len(demonstrations)} demonstrations")
+    print(f"Loaded {len(demonstrations)} demonstrations")
 
     # Prepare data
     all_states = []
@@ -76,13 +83,13 @@ def train_bc(env_name='CartPole-v1'):
             """Initialize BC agent with state and action dimensions"""
             self.device = torch.device("cpu")
 
-            # Simple policy network
+            # Policy network (matching src/networks.py architecture)
             self.policy_network = nn.Sequential(
                 nn.Linear(state_dim, 128),
                 nn.ReLU(),
-                nn.Linear(128, 64),
+                nn.Linear(128, 128),  # Changed from 64 to 128
                 nn.ReLU(),
-                nn.Linear(64, action_dim)
+                nn.Linear(128, action_dim)  # Changed from 64 to 128
             ).to(self.device)
 
             self.optimizer = optim.Adam(self.policy_network.parameters(), lr=1e-3)
@@ -159,32 +166,46 @@ def train_bc(env_name='CartPole-v1'):
     # Save BC model
     model_path = f"bc_{env_name}.pth"
     torch.save(agent.policy_network.state_dict(), model_path)
-    print(f"💾 BC model saved: {model_path}")
+    print(f"BC model saved: {model_path}")
 
-    # Plot results
-    plt.figure(figsize=(12, 4))
-
-    plt.subplot(1, 2, 1)
-    plt.plot(losses)
-    plt.xlabel('Epoch')
-    plt.ylabel('Loss')
-    plt.title('Behavior Cloning Training Loss')
-    plt.grid(True, alpha=0.3)
-
-    plt.subplot(1, 2, 2)
-    plt.hist(test_rewards, bins=10, alpha=0.7)
-    plt.xlabel('Episode Reward')
-    plt.ylabel('Frequency')
-    plt.title(f'BC Performance\nMean: {np.mean(test_rewards):.1f}, Std: {np.std(test_rewards):.1f}')
-    plt.grid(True, alpha=0.3)
-
+    # Plot results with improved styling
+    fig = plt.figure(figsize=(12, 5))
+    
+    # Left plot: Training loss over epochs
+    ax1 = plt.subplot(1, 2, 1)
+    ax1.plot(losses, color='orangered', linewidth=2)
+    ax1.set_xlabel('Epoch', fontsize=12)
+    ax1.set_ylabel('Cross-Entropy Loss', fontsize=12)
+    ax1.set_title('BC Training Loss', fontsize=13, fontweight='bold')
+    ax1.grid(True, alpha=0.3, linestyle='--')
+    
+    # Add final loss annotation
+    final_loss = losses[-1] if losses else 0
+    ax1.annotate(f'Final: {final_loss:.4f}', 
+                xy=(len(losses)-1, final_loss),
+                xytext=(10, 10), textcoords='offset points',
+                bbox=dict(boxstyle='round,pad=0.5', fc='yellow', alpha=0.7),
+                arrowprops=dict(arrowstyle='->', connectionstyle='arc3,rad=0'))
+    
+    # Middle plot: Performance distribution
+    ax2 = plt.subplot(1, 2, 2)
+    ax2.hist(test_rewards, bins=12, alpha=0.7, color='green', edgecolor='black')
+    ax2.axvline(np.mean(test_rewards), color='red', linestyle='--', linewidth=2,
+               label=f'Mean: {np.mean(test_rewards):.1f}')
+    ax2.set_xlabel('Episode Reward', fontsize=12)
+    ax2.set_ylabel('Frequency', fontsize=12)
+    ax2.set_title('BC Agent Performance Distribution', fontsize=13, fontweight='bold')
+    ax2.legend()
+    ax2.grid(True, alpha=0.3, linestyle='--', axis='y')
+    
     plt.tight_layout()
-    plt.savefig(f'bc_training_{env_name}.png')
-    plt.show()
+    plt.savefig(f'bc_training_{env_name}.png', dpi=150, bbox_inches='tight')
+    print(f"BC training plot saved: bc_training_{env_name}.png")
+    plt.close()
 
     env.close()
 
-    print(f"\n✅ Behavior Cloning complete!")
+    print(f"\nBehavior Cloning training complete!")
     print(f"Average test reward: {np.mean(test_rewards):.2f} ± {np.std(test_rewards):.2f}")
     print(f"Max test reward: {np.max(test_rewards)}")
 

@@ -1,17 +1,24 @@
 import sys
 import os
 
+# Force CPU-only mode to avoid CUDA library issues
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 import pickle
 import numpy as np
 import torch
 import torch.nn as nn
+from src.seed_utils import set_seed
 
 
-def collect_demos(env_name='CartPole-v1', num_episodes=50):
+def collect_demos(env_name='CartPole-v1', num_episodes=50, seed=42):
     """Collect expert demonstrations"""
-    print(f"📹 Collecting Demonstrations from {env_name}")
+    # Set seeds for reproducibility
+    set_seed(seed)
+    
+    print(f"Collecting Demonstrations from {env_name} (seed={seed})")
 
     # Try to import EnvironmentWrapper
     try:
@@ -48,31 +55,29 @@ def collect_demos(env_name='CartPole-v1', num_episodes=50):
     expert_path = f"expert_{env_name}.pth"
 
     if not os.path.exists(expert_path):
-        print(f"❌ Expert model not found: {expert_path}")
+        print(f"ERROR: Expert model not found: {expert_path}")
         print("Please run train_expert.py first!")
         return
 
-    # Create a simple QNetwork to load the expert
+    # Create a simple QNetwork to load the expert (must match the architecture used during training)
     class QNetwork(nn.Module):
         def __init__(self, state_dim, action_dim):
             super().__init__()
-            self.net = nn.Sequential(
-                nn.Linear(state_dim, 128),
-                nn.ReLU(),
-                nn.Linear(128, 64),
-                nn.ReLU(),
-                nn.Linear(64, action_dim)
-            )
+            self.fc1 = nn.Linear(state_dim, 128)
+            self.fc2 = nn.Linear(128, 128)
+            self.fc3 = nn.Linear(128, action_dim)
 
         def forward(self, x):
-            return self.net(x)
+            x = torch.relu(self.fc1(x))
+            x = torch.relu(self.fc2(x))
+            return self.fc3(x)
 
     # Load expert model
     model = QNetwork(state_dim, action_dim)
     model.load_state_dict(torch.load(expert_path, map_location='cpu'))
     model.eval()
 
-    print(f"✅ Loaded expert model from {expert_path}")
+    print(f"Loaded expert model from {expert_path}")
 
     # Collect demonstrations
     demonstrations = []
@@ -126,7 +131,7 @@ def collect_demos(env_name='CartPole-v1', num_episodes=50):
     total_transitions = sum(len(d['states']) for d in demonstrations)
     avg_episode_length = total_transitions / len(demonstrations)
 
-    print(f"\n✅ Demonstrations collected!")
+    print(f"\nDemonstrations collected successfully!")
     print(f"Total episodes: {len(demonstrations)}")
     print(f"Total transitions: {total_transitions}")
     print(f"Average episode length: {avg_episode_length:.1f}")

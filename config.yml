@@ -11,6 +11,12 @@ environments:
     action_dim: 4
     max_steps: 1000
     success_threshold: 200
+    
+  LunarLander-v3:
+    state_dim: 8
+    action_dim: 4
+    max_steps: 1000
+    success_threshold: 200
 
 dqn:
   learning_rate: 0.001

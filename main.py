@@ -4,9 +4,12 @@ DRL Project: From Imitation to Optimization
 Authors: Rushil Ravi & Isabel Moore
 """
 
+import os
+# Force CPU-only mode to avoid CUDA library issues
+os.environ['CUDA_VISIBLE_DEVICES'] = ''
+
 import argparse
 import sys
-import os
 
 # Add scripts directory to Python path
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'scripts'))
@@ -15,7 +18,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'scripts'))
 def main():
     parser = argparse.ArgumentParser(description='DRL Project Pipeline')
     parser.add_argument('--env', type=str, default='CartPole-v1',
-                        choices=['CartPole-v1', 'LunarLander-v2'],
+                        choices=['CartPole-v1', 'LunarLander-v2', 'LunarLander-v3'],
                         help='Environment name')
     parser.add_argument('--mode', type=str, default='expert',
                         choices=['expert', 'demos', 'bc', 'rl', 'eval', 'all'],
@@ -23,9 +26,9 @@ def main():
 
     args = parser.parse_args()
 
-    print(f"🚀 DRL Project: From Imitation to Optimization")
-    print(f"📊 Environment: {args.env}")
-    print(f"⚙️ Mode: {args.mode}")
+    print(f"DRL Project: From Imitation to Optimization")
+    print(f"Environment: {args.env}")
+    print(f"Mode: {args.mode}")
     print("-" * 50)
 
     try:
@@ -70,17 +73,17 @@ def main():
             evaluate.evaluate_all(env_name=args.env)  # Or whatever your function is called
 
         print("\n" + "=" * 50)
-        print("✅ PROJECT COMPLETED SUCCESSFULLY!")
+        print("PROJECT COMPLETED SUCCESSFULLY!")
         print("=" * 50)
 
     except ImportError as e:
-        print(f"\n❌ Import Error: {e}")
+        print(f"\nERROR - Import Error: {e}")
         print("Please check that your script files exist in the scripts/ folder")
     except AttributeError as e:
-        print(f"\n❌ Function not found: {e}")
+        print(f"\nERROR - Function not found: {e}")
         print("Please check function names in your script files")
     except Exception as e:
-        print(f"\n❌ Error: {e}")
+        print(f"\nERROR: {e}")
         import traceback
         traceback.print_exc()
 
