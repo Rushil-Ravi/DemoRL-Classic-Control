@@ -17,7 +17,9 @@ This project investigates whether starting from expert demonstrations accelerate
 
 ## Key Results
 
-Experimental results on CartPole-v1 demonstrate significant advantages of BC initialization:
+### CartPole-v1
+
+Experimental results demonstrate significant advantages of BC initialization:
 
 | Method | Final Performance | Episodes to Threshold | Success Rate |
 |--------|------------------|----------------------|--------------|
@@ -28,6 +30,19 @@ Experimental results on CartPole-v1 demonstrate significant advantages of BC ini
 - BC→RL achieves **99.7% faster learning** (325× sample efficiency improvement)
 - BC→RL reaches **perfect performance** with zero variance
 - BC initialization provides strong prior knowledge that dramatically reduces exploration needs
+
+### LunarLander-v3
+
+This environment is also supported for experimentation. To run:
+```bash
+python main.py --env LunarLander-v3 --mode all
+```
+
+LunarLander presents a more challenging continuous control task with:
+- 8-dimensional continuous state space
+- 4 discrete actions
+- Success threshold: 200 average reward
+- More complex dynamics requiring precise control
 
 ---
 
@@ -44,15 +59,18 @@ pip install -r requirements.txt
 
 ### Run Pipeline
 ```bash
-# Full pipeline (~15 minutes)
+# CartPole-v1 (simple environment, ~5 minutes)
 python main.py --env CartPole-v1 --mode all
 
-# Individual steps
-python main.py --env CartPole-v1 --mode expert    # Train DQN expert
-python main.py --env CartPole-v1 --mode demos     # Collect demonstrations
-python main.py --env CartPole-v1 --mode bc        # Train behavior cloning
-python main.py --env CartPole-v1 --mode rl        # Compare RL methods
-python main.py --env CartPole-v1 --mode eval      # Final evaluation
+# LunarLander-v3 (complex environment, ~10 minutes)
+python main.py --env LunarLander-v3 --mode all
+
+# Individual steps (example for CartPole)
+python main.py --env {env_name} --mode expert    # Train DQN expert
+python main.py --env {env_name} --mode demos     # Collect demonstrations
+python main.py --env {env_name} --mode bc        # Train behavior cloning
+python main.py --env {env_name} --mode rl        # Compare RL methods
+python main.py --env {env_name} --mode eval      # Final evaluation
 ```
 
 ---
@@ -68,11 +86,22 @@ python main.py --env CartPole-v1 --mode eval      # Final evaluation
 All networks use consistent 128→128 hidden layer architecture for fair comparison.
 
 ### Training Configuration
+
+**CartPole-v1:**
 - Expert: 500 episodes, ε-greedy exploration
 - BC: 50 epochs on ~10,000 expert transitions
 - Pure RL: 800 episodes from random initialization
 - BC→RL: 800 episodes starting from BC weights
-- All experiments use seed=42 for reproducibility
+- Success threshold: 195 average reward
+
+**LunarLander-v3:**
+- Expert: 500 episodes, ε-greedy exploration
+- BC: 50 epochs on collected demonstrations
+- Pure RL: 1000 episodes from random initialization
+- BC→RL: 1000 episodes starting from BC weights
+- Success threshold: 200 average reward
+
+All experiments use seed=42 for reproducibility.
 
 ---
 
@@ -115,18 +144,20 @@ BC→RL demonstrates clear advantages:
 ## Discussion
 
 ### Strengths
-- Strong empirical evidence for BC initialization benefits
+- Strong empirical evidence for BC initialization benefits on CartPole-v1
 - Fair experimental comparison with equal training budgets
 - Reproducible results with fixed random seeds
 - Clear visualization of learning dynamics
+- Extensible to multiple environments (CartPole, LunarLander)
 
 ### Limitations
-- Limited to simple environments (CartPole-v1)
+- CartPole results limited to simple environment; LunarLander provides more challenging test
 - Expert quality directly impacts BC performance
 - Requires access to expert demonstrations
-- May not generalize to all domains
+- May not generalize to all domains without adaptation
 
 ### Future Work
+- Complete LunarLander-v3 experiments for comparison with CartPole results
 - Test on more complex environments (Atari, MuJoCo)
 - Investigate minimum demonstration requirements
 - Study impact of imperfect expert demonstrations
