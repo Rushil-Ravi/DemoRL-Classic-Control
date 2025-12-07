@@ -1,4 +1,4 @@
-# 🎮 From Imitation to Optimization: Evaluating Demonstrators in Classic Control Environments
+# From Imitation to Optimization: Evaluating Demonstrators in Classic Control Environments
 
 **Course:** Deep Reinforcement Learning  
 **Team:** Rushil Ravi (UIN: 836000314) & Isabel Moore (UIN: 229001058)  
@@ -9,10 +9,10 @@ This project investigates whether starting from expert demonstrations accelerate
 
 ##  Key Findings
 
-✅ **79.6% faster learning** with BC initialization on CartPole-v1  
-✅ **Perfect imitation** by Behavior Cloning (500.00 ± 0.00 reward)  
-✅ **Statistical significance** proven through extensive evaluation  
-✅ **Sample efficiency** dramatically improved with demonstrations
+- **79.6% faster learning** with BC initialization on CartPole-v1
+- **Perfect imitation** by Behavior Cloning (500.00 ± 0.00 reward)
+- **Statistical significance** proven through extensive evaluation
+- **Sample efficiency** dramatically improved with demonstrations
 
 ##  Quick Start
 
