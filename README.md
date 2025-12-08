@@ -9,7 +9,9 @@
 
 ## Project Overview
 
-This project investigates whether starting from expert demonstrations accelerates reinforcement learning compared to learning from scratch. We implement a complete pipeline: **Expert DQN → Behavior Cloning → PPO fine-tuning**, comparing Pure RL vs BC→RL approaches on classic control tasks.
+This project investigates whether starting from expert demonstrations accelerates reinforcement learning compared to learning from scratch. 
+
+We implement a complete pipeline: **Expert DQN → Behavior Cloning → PPO fine-tuning**, comparing Pure RL vs BC→RL approaches on classic control tasks.
 
 **Research Question:** *Can behavior cloning from expert demonstrations provide a better initialization for reinforcement learning?*
 
@@ -19,30 +21,45 @@ This project investigates whether starting from expert demonstrations accelerate
 
 ### CartPole-v1
 
-Experimental results demonstrate significant advantages of BC initialization:
+Experimental results in CartPole demonstrate significant sample efficiency gains but reveal unexpected performance dynamics:
 
-| Method | Final Performance | Episodes to Threshold | Success Rate |
-|--------|------------------|----------------------|--------------|
-| Pure RL | 126.50 ± 23.26 | 326 episodes | 15.0% |
-| BC→RL | **500.00 ± 0.00** | **1 episode** | **93.0%** |
+| Method | Final Test Performance | Episodes to Threshold | Sample Efficiency |
+|--------|----------------------|----------------------|-------------------|
+| Pure RL | 500.00 ± 0.00 | 369 episodes | Baseline |
+| BC-Only | **500.00 ± 0.00** | N/A | N/A |
+| BC→RL | 200.30 ± 1.93 | **1 episode** | **99.7% faster** |
 
-**Findings:**
-- BC→RL achieves **99.7% faster learning** (325× sample efficiency improvement)
-- BC→RL reaches **perfect performance** with zero variance
-- BC initialization provides strong prior knowledge that dramatically reduces exploration needs
+**Key Findings:**
+- BC→RL achieves **99.7% faster learning** (1 vs 369 episodes to threshold)
+- **Surprising result:** BC-Only and Pure RL both achieve perfect performance (500.0)
+- BC→RL degrades from BC initialization (500.0 → 200.3), suggesting RL fine-tuning can harm strong BC policies
+- Demonstrates **exploration-induced forgetting** where PPO updates drive agent away from optimal BC policy
 
 ### LunarLander-v3
 
-This environment is also supported for experimentation. To run:
-```bash
-python main.py --env LunarLander-v3 --mode all
-```
+LunarLander presents a more challenging environment with dramatically different results:
 
-LunarLander presents a more challenging continuous control task with:
-- 8-dimensional continuous state space
-- 4 discrete actions
-- Success threshold: 200 average reward
-- More complex dynamics requiring precise control
+| Method | Final Test Performance | Episodes to Threshold | Sample Efficiency |
+|--------|----------------------|----------------------|-------------------|
+| Pure RL | -577.19 ± 139.44 | Never (1000+) | Failed |
+| BC-Only | **145.82 ± 113.36** | N/A | N/A |
+| BC→RL | 114.65 ± 114.04 | 286 episodes | **71.4% faster** |
+
+**Key Findings:**
+- BC→RL achieves **71.4% sample efficiency improvement** (286 vs 1000 episodes)
+- **Pure RL catastrophically fails** (-577.19 average reward) in this complex environment
+- BC-Only outperforms BC→RL (145.82 vs 114.65), again showing RL fine-tuning degradation
+- Environment complexity matters: demonstration benefits are critical when random exploration fails
+
+### Cross-Environment Insights
+
+**BC Exceeds Experts:** Remarkably, BC policies outperformed their DQN expert demonstrators in both environments:
+- LunarLander: BC 158.51 vs Expert 61.60 (257.3%)
+- CartPole: BC 500.0 vs Expert 380.20 (131.5%)
+
+This suggests supervised learning filters exploration noise better than ε-greedy policies.
+
+**The BC→RL Paradox:** While BC→RL shows superior sample efficiency, it consistently underperforms BC-Only in final evaluation, challenging the assumption that RL fine-tuning always improves imitation learning.
 
 ---
 
@@ -78,30 +95,34 @@ python main.py --env {env_name} --mode eval      # Final evaluation
 ## Implementation
 
 ### Algorithms
+
 1. **Deep Q-Network (DQN)** - Expert agent training with epsilon-greedy exploration
-2. **Behavior Cloning (BC)** - Supervised learning from expert demonstrations
+2. **Behavior Cloning (BC)** - Supervised learning from expert demonstrations  
 3. **Proximal Policy Optimization (PPO)** - Policy gradient RL with clipped objective
 
 ### Architecture
+
 All networks use consistent 128→128 hidden layer architecture for fair comparison.
 
 ### Training Configuration
 
 **CartPole-v1:**
-- Expert: 500 episodes, ε-greedy exploration
-- BC: 50 epochs on ~10,000 expert transitions
-- Pure RL: 800 episodes from random initialization
-- BC→RL: 800 episodes starting from BC weights
-- Success threshold: 195 average reward
+- **Expert (DQN):** 500 episodes, ε-greedy exploration (1.0→0.01)
+- **Demonstrations:** 50 episodes, 25,000 transitions (avg 500.0 steps/episode)
+- **BC:** 50 epochs, final loss 0.0851
+- **Pure RL (PPO):** 800 episodes from random initialization
+- **BC→RL (PPO):** 800 episodes starting from BC weights
+- **Success threshold:** 195 average reward
 
 **LunarLander-v3:**
-- Expert: 500 episodes, ε-greedy exploration
-- BC: 50 epochs on collected demonstrations
-- Pure RL: 1000 episodes from random initialization
-- BC→RL: 1000 episodes starting from BC weights
-- Success threshold: 200 average reward
+- **Expert (DQN):** 500 episodes, ε-greedy exploration (1.0→0.01)
+- **Demonstrations:** 50 episodes, 18,479 transitions (avg 369.6 steps/episode)
+- **BC:** 50 epochs, final loss 0.3036
+- **Pure RL (PPO):** 1000 episodes from random initialization
+- **BC→RL (PPO):** 1000 episodes starting from BC weights
+- **Success threshold:** 200 average reward
 
-All experiments use seed=42 for reproducibility.
+All experiments use seed=42 for reproducibility. Network architecture: 128→128 hidden layers for all methods.
 
 ---
 
@@ -127,49 +148,33 @@ DemoRL-Classic-Control/
 
 ## Evaluation
 
-### Methodology
-- Fixed training budget: 800 episodes for both Pure RL and BC→RL
-- Statistical evaluation: 20 test episodes per method with mean ± std
-- Metrics: Final performance, sample efficiency, success rate
-
-### Results Analysis
-BC→RL demonstrates clear advantages:
-- **Sample Efficiency:** Reaches threshold in 1 episode vs 326 for Pure RL
-- **Final Performance:** Perfect score (500/500) vs 126.50 for Pure RL  
-- **Stability:** Zero variance vs high variance (±72.14) for Pure RL
-- **Success Rate:** 93% vs 15% for Pure RL
+Results reveal a key paradox: BC→RL learns 71-99% faster than Pure RL but degrades from BC initialization in final performance. BC-Only consistently achieves best results. Pure RL fails catastrophically in complex LunarLander (-577.19) but succeeds in simple CartPole (500.0), showing environment complexity matters critically.
 
 ---
 
 ## Discussion
 
 ### Strengths
-- Strong empirical evidence for BC initialization benefits on CartPole-v1
-- Fair experimental comparison with equal training budgets
-- Reproducible results with fixed random seeds
-- Clear visualization of learning dynamics
-- Extensible to multiple environments (CartPole, LunarLander)
+
+Strong sample efficiency gains (71-99% faster learning) confirm demonstration benefits. BC exceeds expert performance by filtering exploration noise. Fair evaluation across two complexity levels provides clear insights into when each approach works.
 
 ### Limitations
-- CartPole results limited to simple environment; LunarLander provides more challenging test
-- Expert quality directly impacts BC performance
-- Requires access to expert demonstrations
-- May not generalize to all domains without adaptation
+
+**Key finding:** RL fine-tuning harms strong BC policies through exploration-induced forgetting, challenging assumptions that RL always improves imitation. Environment complexity critically affects viability—Pure RL fails in LunarLander but succeeds in CartPole. Single seed, fixed hyperparameters, and no adaptive switching limit robustness.
 
 ### Future Work
-- Complete LunarLander-v3 experiments for comparison with CartPole results
-- Test on more complex environments (Atari, MuJoCo)
-- Investigate minimum demonstration requirements
-- Study impact of imperfect expert demonstrations
-- Explore transfer learning across tasks
+
+Priorities: multiple seeds, adaptive switching, hyperparameter tuning. Extensions: complex environments (Atari, MuJoCo), iterative methods (DAgger), hybrid approaches (DQfD), continuous control (DDPG/SAC), transfer learning.
 
 ---
 
 ## Team Contributions
 
-**Rushil Ravi:** Expert DQN implementation, demonstration collection pipeline, project infrastructure, debugging and testing
+**Rushil Ravi:**  
+Expert DQN implementation, demonstration collection pipeline, project infrastructure, debugging and testing
 
-**Isabel Moore:** Experimental design, statistical analysis, visualization, literature review, report writing
+**Isabel Moore:**  
+Experimental design, statistical analysis, visualization, literature review, report writing
 
 Both members contributed equally to algorithm implementation, hyperparameter tuning, and result analysis.
 
@@ -179,14 +184,19 @@ Both members contributed equally to algorithm implementation, hyperparameter tun
 
 1. Mnih et al. (2015). "Human-level control through deep reinforcement learning." *Nature*
 2. Schulman et al. (2017). "Proximal Policy Optimization Algorithms." *arXiv*
-3. Pomerleau (1988). "ALVINN: An Autonomous Land Vehicle in a Neural Network." *NeurIPS*
-4. Hussein et al. (2017). "Imitation Learning: A Survey of Learning Methods." *JMLR*
-5. Sutton & Barto (2018). "Reinforcement Learning: An Introduction." *MIT Press*
-6. Silver et al. (2016). "Mastering the game of Go with deep neural networks." *Nature*
-7. Brockman et al. (2016). "OpenAI Gym." *arXiv*
-8. Paszke et al. (2019). "PyTorch: An Imperative Style, High-Performance Deep Learning Library." *NeurIPS*
-9. Ross et al. (2011). "A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning." *AISTATS*
-10. Hester et al. (2018). "Deep Q-learning from Demonstrations." *AAAI*
+3. Pomerleau (1991). "Efficient training of artificial neural networks for autonomous navigation." *Neural Computation*
+4. Sutton & Barto (2018). "Reinforcement Learning: An Introduction." *MIT Press*
+5. Silver et al. (2016). "Mastering the game of Go with deep neural networks." *Nature*
+6. Brockman et al. (2016). "OpenAI Gym." *arXiv*
+7. Paszke et al. (2019). "PyTorch: An Imperative Style, High-Performance Deep Learning Library." *NeurIPS*
+8. Ross et al. (2011). "A Reduction of Imitation Learning and Structured Prediction to No-Regret Online Learning." *AISTATS*
+9. Hester et al. (2018). "Deep Q-learning from Demonstrations." *AAAI*
+10. Ho & Ermon (2016). "Generative Adversarial Imitation Learning." *NeurIPS*
+11. Lillicrap et al. (2015). "Continuous Control with Deep Reinforcement Learning." *arXiv*
+12. Mnih et al. (2016). "Asynchronous Methods for Deep Reinforcement Learning." *ICML*
+13. Rajeswaran et al. (2017). "Learning complex dexterous manipulation with demonstrations." *arXiv*
+14. Parisotto et al. (2016). "Actor-Mimic: Deep multitask and transfer RL." *arXiv*
+15. Rusu et al. (2016). "Policy distillation." *arXiv*
 
 ---
 
