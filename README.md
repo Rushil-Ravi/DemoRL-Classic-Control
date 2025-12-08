@@ -17,6 +17,15 @@ We implement a complete pipeline: **Expert DQN → Behavior Cloning → PPO fine
 
 ---
 
+## Team Contributions
+
+**Rushil Ravi:**  
+Baseline implementation (CartPole experiments), initial DQN/BC/PPO framework, project infrastructure setup
+
+**Isabel Moore:**  
+LunarLander implementation and experiments, report writing, presentation development, statistical analysis, visualization, and literature review
+
+---
 ## Key Results
 
 ### CartPole-v1
@@ -61,6 +70,8 @@ This suggests supervised learning filters exploration noise better than ε-greed
 
 **The BC→RL Paradox:** While BC→RL shows superior sample efficiency, it consistently underperforms BC-Only in final evaluation, challenging the assumption that RL fine-tuning always improves imitation learning.
 
+Results reveal a key paradox: BC→RL learns 71-99% faster than Pure RL but degrades from BC initialization in final performance. BC-Only consistently achieves best results. Pure RL fails catastrophically in complex LunarLander (-577.19) but succeeds in simple CartPole (500.0), showing environment complexity matters critically.
+
 ---
 
 ## Quick Start
@@ -92,40 +103,6 @@ python main.py --env {env_name} --mode eval      # Final evaluation
 
 ---
 
-## Implementation
-
-### Algorithms
-
-1. **Deep Q-Network (DQN)** - Expert agent training with epsilon-greedy exploration
-2. **Behavior Cloning (BC)** - Supervised learning from expert demonstrations  
-3. **Proximal Policy Optimization (PPO)** - Policy gradient RL with clipped objective
-
-### Architecture
-
-All networks use consistent 128→128 hidden layer architecture for fair comparison.
-
-### Training Configuration
-
-**CartPole-v1:**
-- **Expert (DQN):** 500 episodes, ε-greedy exploration (1.0→0.01)
-- **Demonstrations:** 50 episodes, 25,000 transitions (avg 500.0 steps/episode)
-- **BC:** 50 epochs, final loss 0.0851
-- **Pure RL (PPO):** 800 episodes from random initialization
-- **BC→RL (PPO):** 800 episodes starting from BC weights
-- **Success threshold:** 195 average reward
-
-**LunarLander-v3:**
-- **Expert (DQN):** 500 episodes, ε-greedy exploration (1.0→0.01)
-- **Demonstrations:** 50 episodes, 18,479 transitions (avg 369.6 steps/episode)
-- **BC:** 50 epochs, final loss 0.3036
-- **Pure RL (PPO):** 1000 episodes from random initialization
-- **BC→RL (PPO):** 1000 episodes starting from BC weights
-- **Success threshold:** 200 average reward
-
-All experiments use seed=42 for reproducibility. Network architecture: 128→128 hidden layers for all methods.
-
----
-
 ## Project Structure
 
 ```
@@ -143,40 +120,6 @@ DemoRL-Classic-Control/
 │   └── seed_utils.py
 └── images/                 # Generated plots
 ```
-
----
-
-## Evaluation
-
-Results reveal a key paradox: BC→RL learns 71-99% faster than Pure RL but degrades from BC initialization in final performance. BC-Only consistently achieves best results. Pure RL fails catastrophically in complex LunarLander (-577.19) but succeeds in simple CartPole (500.0), showing environment complexity matters critically.
-
----
-
-## Discussion
-
-### Strengths
-
-Strong sample efficiency gains (71-99% faster learning) confirm demonstration benefits. BC exceeds expert performance by filtering exploration noise. Fair evaluation across two complexity levels provides clear insights into when each approach works.
-
-### Limitations
-
-**Key finding:** RL fine-tuning harms strong BC policies through exploration-induced forgetting, challenging assumptions that RL always improves imitation. Environment complexity critically affects viability—Pure RL fails in LunarLander but succeeds in CartPole. Single seed, fixed hyperparameters, and no adaptive switching limit robustness.
-
-### Future Work
-
-Priorities: multiple seeds, adaptive switching, hyperparameter tuning. Extensions: complex environments (Atari, MuJoCo), iterative methods (DAgger), hybrid approaches (DQfD), continuous control (DDPG/SAC), transfer learning.
-
----
-
-## Team Contributions
-
-**Rushil Ravi:**  
-Expert DQN implementation, demonstration collection pipeline, project infrastructure, debugging and testing
-
-**Isabel Moore:**  
-Experimental design, statistical analysis, visualization, literature review, report writing
-
-Both members contributed equally to algorithm implementation, hyperparameter tuning, and result analysis.
 
 ---
 
