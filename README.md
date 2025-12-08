@@ -23,7 +23,7 @@ We implement a complete pipeline: **Expert DQN → Behavior Cloning → PPO fine
 Baseline implementation (CartPole experiments), initial DQN/BC/PPO framework, project infrastructure setup
 
 **Isabel Moore:**  
-LunarLander implementation and experiments, report writing, presentation development, statistical analysis, visualization, and literature review
+LunarLander implementation and experiments, report writing and analysis from both CartPole and LunarLander experiments, presentation development
 
 ---
 ## Key Results
