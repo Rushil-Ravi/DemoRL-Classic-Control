@@ -3,7 +3,7 @@
 **Course:** Deep Reinforcement Learning  
 **Team:** Rushil Ravi (UIN: 836000314) & Isabel Moore (UIN: 229001058)  
 **GitHub:** [Repository Link](https://github.com/Rushil-Ravi/DemoRL-Classic-Control)    
-**Video Demo:** [5-minute YouTube presentation]
+**Video Demo:** [Repository Link](https://youtu.be/Xav3t-r40V0)    
 
 ---
 
