@@ -3,7 +3,7 @@
 **Course:** Deep Reinforcement Learning  
 **Team:** Rushil Ravi (UIN: 836000314) & Isabel Moore (UIN: 229001058)  
 **GitHub:** [Repository Link](https://github.com/Rushil-Ravi/DemoRL-Classic-Control)    
-**Video Demo:** [Repository Link](https://youtu.be/Xav3t-r40V0)    
+**Video Demo:** [YouTube Link](https://youtu.be/Xav3t-r40V0)    
 
 ---
 
@@ -23,7 +23,7 @@ We implement a complete pipeline: **Expert DQN → Behavior Cloning → PPO fine
 Baseline implementation (CartPole experiments), initial DQN/BC/PPO framework, project infrastructure setup
 
 **Isabel Moore:**  
-LunarLander implementation and experiments, report writing and analysis from both CartPole and LunarLander experiments, presentation development
+LunarLander implementation and experiments, report writing and analysis from both CartPole and LunarLander experiments, and presentation development
 
 ---
 ## Key Results
